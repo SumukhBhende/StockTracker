@@ -5,6 +5,62 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
+def totalv():
+    # Read the Excel file
+    stocks_today_df = pd.read_excel('Stocks Today.xlsx')
+
+    # Calculate the sum of the "Total Value" column
+    total_value_sum = stocks_today_df['Total Value'].sum()
+
+    # Create a new row with the total value
+    total_row = pd.DataFrame([{'Stocks': '', 'Quantity': '', 'Stock Prices': 'total =', 'Total Value': total_value_sum, 'Closed Price Date': ''}])
+
+    # Append the total value row to the DataFrame
+    stocks_today_df = pd.concat([stocks_today_df, total_row], ignore_index=True)
+
+    # Save the updated DataFrame back to the Excel file
+    stocks_today_df.to_excel('Stocks Today.xlsx', index=False)
+
+def add_closed_price_date():
+    # Read the Excel file
+    stocks_today_df = pd.read_excel('Stocks Today.xlsx')
+
+    # Filter out the extra row
+    stocks_today_df = stocks_today_df[stocks_today_df['Stock Prices'] != 'total =']
+
+    # Get today's date
+    today_date = date.today()
+
+    # Convert the 'Date' column to datetime.date type
+    stocks_today_df['Date'] = pd.to_datetime(stocks_today_df['Date']).dt.date
+
+    # Check if the date under the "Date" column matches today's date
+    date_match = stocks_today_df['Date'].eq(today_date).any()
+
+    if not date_match:
+        stock_names = stocks_today_df['Stocks'].tolist()
+        stock_store_df = pd.read_excel('StockStore.xlsx')
+        stock_symbols = stock_store_df[stock_store_df['Stocks'].isin(stock_names)]['Symbols'].tolist()
+        closed_price_dates = []
+
+        for symbol in stock_symbols:
+            url = f'https://www.google.com/finance/quote/{symbol}:NSE'
+            response = requests.get(url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Find the closed price date on the page
+            date_span = soup.find('div', class_='ygUjEc')
+            if date_span:
+                closed_price_date = date_span.text
+                closed_price_dates.append(closed_price_date)
+            else:
+                closed_price_dates.append(None)
+
+        # Add the "Closed Price Date" column to the stocks_today_df DataFrame
+        stocks_today_df['Closed Price Date'] = closed_price_dates
+
+        # Save the updated DataFrame back to the Excel file
+        stocks_today_df.to_excel('Stocks Today.xlsx', index=False)
 
 def stockupdate():
 
@@ -69,6 +125,8 @@ while i==0:
     current_time = timecheck()
     if current_time >= datetime.strptime('16:00:00', '%H:%M:%S').time():
         stockupdate()
+        add_closed_price_date()
+        totalv()
         i=1
     else:
         continue
