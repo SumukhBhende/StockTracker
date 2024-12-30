@@ -56,9 +56,19 @@ def stockupdate():
         # Save the updated DataFrame back to the Excel file
         stocks_today_df.to_excel('Stocks Today.xlsx', index=False)
 
+
+def timecheck():
+    current_time = datetime.now().time()
+    return current_time
+
 # Get the current system time
-current_time = datetime.now().time()
+i=0
 
 # Check if the current time is past 4 PM (16:00:00)
-if current_time >= datetime.strptime('16:00:00', '%H:%M:%S').time():
-    stockupdate()
+while i==0:
+    current_time = timecheck()
+    if current_time >= datetime.strptime('16:00:00', '%H:%M:%S').time():
+        stockupdate()
+        i=1
+    else:
+        continue
