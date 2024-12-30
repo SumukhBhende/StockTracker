@@ -9,23 +9,14 @@ def totalv():
     # Read the Excel file
     stocks_today_df = pd.read_excel('Stocks Today.xlsx')
 
-    # Exclude the row where 'Stock Prices' is 'total ='
-    filtered_df = stocks_today_df[stocks_today_df['Stock Prices'] != 'total =']
-
     # Calculate the sum of the "Total Value" column
-    total_value_sum = filtered_df['Total Value'].sum()
+    total_value_sum = stocks_today_df['Total Value'].sum()
 
-    # Check if there already exists a row saying 'total ='
-    total_row_index = stocks_today_df[stocks_today_df['Stock Prices'] == 'total ='].index
+    # Create a new row with the total value
+    total_row = pd.DataFrame([{'Stocks': '', 'Quantity': '', 'Stock Prices': 'total =', 'Total Value': total_value_sum, 'Closed Price Date': ''}])
 
-    if not total_row_index.empty:
-        # Update the existing total row
-        stocks_today_df.at[total_row_index[0], 'Total Value'] = total_value_sum
-    else:
-        # Create a new row with the total value
-        total_row = pd.DataFrame([{'Stocks': '', 'Quantity': '', 'Stock Prices': 'total =', 'Total Value': total_value_sum, 'Closed Price Date': ''}])
-        # Append the total value row to the DataFrame
-        stocks_today_df = pd.concat([stocks_today_df, total_row], ignore_index=True)
+    # Append the total value row to the DataFrame
+    stocks_today_df = pd.concat([stocks_today_df, total_row], ignore_index=True)
 
     # Save the updated DataFrame back to the Excel file
     stocks_today_df.to_excel('Stocks Today.xlsx', index=False)
